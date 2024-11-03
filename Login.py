@@ -39,8 +39,5 @@ def login_to_twitter():
         print("Cookies saved to cookies.json")
 
         # Close the browser
-        time.sleep(5)  # Keep the browser open for a few seconds to observe
+        time.sleep(5) 
         browser.close()
-
-# Run the login function
-login_to_twitter()
