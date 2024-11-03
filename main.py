@@ -6,67 +6,57 @@ from configparser import ConfigParser
 from random import randint
 from FormatCookies import load_and_transform_cookies
 from Login import login_to_twitter
-from Utilities import NameToID
+from Utilities import setUpCSV, selectChoice, handleChoice
+from Scrape import get_tweets_by_search, get_tweets_from_user
 
+if __name__ == '__main__':
+    # Initialize Client
+    client = Client(language='en-US')
 
-MINIMUM_TWEETS = 10
-QUERY = '(from:lidangzzz)'
+    # Login to Twitter
+    login_to_twitter()
 
-def get_tweets(tweets, numericalID):
-    if tweets is None:
-        #* get tweets
-        print(f'{datetime.now()} - Getting tweets...\n')
-        tweets = client.get_user_tweets(numericalID, 'Tweets')
-    else:
-        wait_time = randint(5, 10)
-        print(f'{datetime.now()} - Getting next tweets after {wait_time} seconds ...\n')
-        time.sleep(wait_time)
-        tweets = tweets.next()
-    return tweets
+    # Load and set cookies
+    cookies_dict = load_and_transform_cookies('cookies.json')
+    client.set_cookies(cookies_dict)
 
-# Initialize Client
-client = Client(language='en-US')
+    # Set up csv files
+    setUpCSV()
 
-# Login to Twitter
-login_to_twitter()
+    # Let user select a choice to search for tweets
+    choice = selectChoice()
+    search, tweet_max = handleChoice(choice, client)
+    tweet_max = int(tweet_max)
 
-# Load and set cookies
-cookies_dict = load_and_transform_cookies('cookies.json')
-client.set_cookies(cookies_dict)
+    tweet_count = 0
+    tweets = None
 
-# Ger user numerical ID
-numericalID = NameToID('lidangzzz', client)
+    while tweet_count < tweet_max:
+        try:
+            if choice == 'search':
+                tweets = get_tweets_by_search(tweets, search, client)
+            elif choice == 'user':
+                tweets = get_tweets_from_user(tweets, search, client)
+    
+        except TooManyRequests as e:
+            rate_limit_reset = datetime.fromtimestamp(e.rate_limit_reset)
+            print(f'{datetime.now()} - Rate limit reached. Waiting until {rate_limit_reset} ...\n')
+            wait_time = rate_limit_reset - datetime.now()
+            time.sleep(wait_time.total_seconds())
+            continue
 
-#* Create a csv file to store the tweets
-with open('tweet.csv', 'w', newline='', encoding='utf-8') as file:
-    writer = csv.writer(file)
-    writer.writerow(['Tweet_Count', 'User_Name', 'Tweet_Text', 'Created_At', 'Retweet_Count', 'Favorite_Count'])
+        if not tweets:
+            print(f'{datetime.now()} - No more tweets found\n')
+            break
 
-tweet_count = 0
-tweets = None
+        for tweet in tweets:
+            tweet_count += 1
+            tweet_data = [tweet_count, tweet.user.name, tweet.full_text, tweet.created_at, tweet.retweet_count, tweet.favorite_count]
 
-while tweet_count < MINIMUM_TWEETS:
+            with open('tweet.csv', 'a', newline='', encoding='utf-8') as file:
+                writer = csv.writer(file)
+                writer.writerow(tweet_data)
 
-    try:
-        tweets = get_tweets(tweets, numericalID)
-    except TooManyRequests as e:
-        rate_limit_reset = datetime.fromtimestamp(e.rate_limit_reset)
-        print(f'{datetime.now()} - Rate limit reached. Waiting until {rate_limit_reset} ...\n')
-        wait_time = rate_limit_reset - datetime.now()
-        time.sleep(wait_time.total_seconds())
-        continue
+        print(f'{datetime.now()} - Got {tweet_count} tweets\n')
 
-    if not tweets:
-        print(f'{datetime.now()} - No more tweets found\n')
-        break
-
-    for tweet in tweets:
-        tweet_count += 1
-        tweet_data = [tweet_count, tweet.user.name, tweet.full_text, tweet.created_at, tweet.retweet_count, tweet.favorite_count]
-
-        with open('tweet.csv', 'a', newline='', encoding='utf-8') as file:
-            writer = csv.writer(file)
-            writer.writerow(tweet_data)
-
-    print(f'{datetime.now()} - Got {tweet_count} tweets\n')
 
