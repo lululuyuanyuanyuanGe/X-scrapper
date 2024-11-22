@@ -9,7 +9,7 @@ def summarize_tweet(file_name):
     """
     tweet_content = get_content_from_tweet_csv(file_name)
     # print(f"Tweet content: {tweet_content}") 
-    client = openai.OpenAI(api_key='Enter your API key here')
+    client = openai.OpenAI(api_key='API')
     try:
         # Create a chat completion
         response = client.chat.completions.create(

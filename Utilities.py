@@ -1,14 +1,11 @@
-from twikit import Client, TooManyRequests
-import time
-from datetime import datetime
 import csv
-from configparser import ConfigParser
 from random import randint
 import pandas as pd
+import sys
 
 # Convert user name to numerical ID
 def NameToID(name, client):
-    user = client.get_user_by_screen_name(name)
+    user = client.get_user_by_screen_name(name.lower())
     user_id = user.id
     return user_id
 
@@ -21,9 +18,9 @@ def setUpCSV():
 # Let's user select a choice
 def selectChoice(client) -> str:
     while True:
-        choice = input('Type \'user\' to look for a specific user\'s tweets or \'search\' to search for a topic: ')
-        choice = choice.lower()
-        if choice == 'q':
+        print('Type \'user\' to look for a specific user\'s tweets or \'search\' to search for a topic: ')
+        choice = sys.stdin.readline().strip()
+        if choice.lower() == 'q':
             exit()
         result = handleChoice(choice, client)
         if result != None:
@@ -33,20 +30,24 @@ def selectChoice(client) -> str:
 # handle the choice
 def handleChoice(choice, client):
     if choice == 'user':
-        user_name = input('Enter the user name: ')
-        if user_name == 'q':
+        print('Enter the user name: ')
+        user_name = sys.stdin.readline().strip()
+        if user_name.lower() == 'q':
             exit()
         numericalID = NameToID(user_name, client)
-        count = input('Enter the number of tweets you want to collect: ')
-        if count == 'q':
+        print('Enter the number of tweets you want to collect: ')
+        count = sys.stdin.readline().strip()
+        if count.lower() == 'q':
             exit()
         return numericalID, count
     elif choice == 'search':
-        query = input('Enter the search query: ')
-        if query == 'q':
+        print('Enter the search query: ')
+        query = sys.stdin.readline().strip()
+        if query.lower() == 'q':
             exit()
-        count = input('Enter the number of tweets you want to collect: ')
-        if count == 'q':
+        print('Enter the number of tweets you want to collect: ')
+        count = sys.stdin.readline().strip()
+        if count.lower() == 'q':
             exit()
         return query, count
     else:

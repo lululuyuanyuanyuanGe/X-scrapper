@@ -9,6 +9,9 @@ from Login import login_to_twitter
 from Utilities import setUpCSV, selectChoice, handleChoice, print_csv_content
 from Scrape import get_tweets_by_search, get_tweets_from_user
 from chatGPT import summarize_tweet
+import sys
+
+sys.stdout.reconfigure(encoding='utf-8', line_buffering=True)
 
 def main():
     global Login
@@ -31,6 +34,7 @@ def main():
 
     # Let user select a choice to search for tweets
     search, tweet_max, choice = selectChoice(client)
+    print("Receive the data...")
     tweet_max = int(tweet_max)
 
     tweet_count = 0
